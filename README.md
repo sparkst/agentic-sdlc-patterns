@@ -50,13 +50,6 @@ works-but-founder-scale, fragile, mixed, or designed-not-built); and "steal this
 an outside team can adopt. Maturity verdicts are honest by policy: a pattern that would break at 10x
 says so, and known open defects are named.
 
-## A note on what is here and what is not
-
-This repo is de-identified by design and by a CI gate. It carries the patterns and their generic
-forms. It does not carry client names, private hostnames, secrets, internal file paths, or the
-running code. Those stay where they belong. See [de-identification/](de-identification/) for the
-scan that enforces it.
-
 ## License
 
 MIT. See [LICENSE](LICENSE).
