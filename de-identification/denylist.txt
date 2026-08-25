@@ -1,0 +1,47 @@
+# De-identification denylist: literal sensitive strings, one per line.
+# '#' starts a comment. Matching is case-insensitive with a word boundary on
+# any edge that is a word character (so "jarvis" will not match inside a
+# larger word, but "fleet/" still matches). Add new terms in the right block.
+
+# --- Client names ---------------------------------------------------------
+# Travis adds every client name here. The public content says "the client"
+# or "the operator", never a real name. "Cardinal" alone is intentionally
+# broad; false positives are acceptable for a private-to-public gate.
+Cardinal Health
+Cardinal
+
+# --- People ---------------------------------------------------------------
+# Public content refers to "the operator", never a person.
+Travis Sparks
+Travis
+Sparks
+Emerson
+Ronald
+sparkst@gmail.com
+
+# --- Hostnames / infrastructure ------------------------------------------
+hetzner
+jarvis
+macair
+macbook
+Traviss-Mac-mini
+Traviss-Mac-mini.local
+Traviss-MacBook-Air
+hooks.sparkry.ai
+n8n.sparkry.ai
+ubuntu-4gb-nbg1-2
+
+# --- Private repos / internal paths --------------------------------------
+# Full "owner/repo" slugs and bare path prefixes. The public repos
+# sparkst/sparkry-claude-skills and sparkst/agentic-sdlc-patterns do NOT
+# contain any of these substrings, so they stay legal on their own; the
+# allowlist is a second safety net for public source URLs.
+sparkst/fleet
+sparkst/n8n-render
+sparkst/claude-skills
+sparkst/memory
+fleet/
+n8n-render/
+sources/
+~/memory/
+~/.claude
