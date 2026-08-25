@@ -238,6 +238,12 @@ class RealSeededPolicyTests(unittest.TestCase):
     def test_redis_url(self):
         self._assert_trips("REDIS_URL=redis://default:pw@cache:6379/0\n")
 
+    def _assert_clean(self, name, content):
+        _write(self.root, name, content)
+        _git(self.root, "add", "-A")
+        code, out = _run_scan(self.root)
+        self.assertEqual(code, 0, "expected clean for %r\n%s" % (content, out))
+
     def test_public_repo_reference_is_clean(self):
         # The public skills repo must not trip the gate.
         _write(self.root, "credits.md",
@@ -245,6 +251,27 @@ class RealSeededPolicyTests(unittest.TestCase):
         _git(self.root, "add", "-A")
         code, out = _run_scan(self.root)
         self.assertEqual(code, 0, out)
+
+    def test_wo_pattern_does_not_match_inside_a_word(self):
+        # "two-verb" must not trip the work-order id pattern.
+        self._assert_clean(
+            "prose.md",
+            "Put it behind a two-verb retrieval API, files authoritative.\n")
+
+    def test_wo_real_work_order_id_still_trips(self):
+        self._assert_trips("tracked under wo-abc123def in the queue\n")
+
+    def test_chapter_fleet_path_is_clean(self):
+        # This repo's own Chapter 3 dir ends in "fleet/"; the exact path is
+        # allowlisted, so the index link must not trip.
+        self._assert_clean(
+            "index.md",
+            "See [chapters/03-watching-the-fleet/README.md]"
+            "(chapters/03-watching-the-fleet/README.md) for the diagram.\n")
+
+    def test_bare_private_fleet_path_still_trips(self):
+        # A real private path must still fail even after the chapter allowlist.
+        self._assert_trips("the code is in fleet/session-spawner/spawner.py\n")
 
 
 if __name__ == "__main__":

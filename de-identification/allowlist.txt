@@ -14,3 +14,9 @@ sparkst/sparkry-claude-skills
 # Public source URLs cited in CREDITS.md. Add the full public URL here when a
 # generic path prefix such as "sources/" would otherwise flag it. Example:
 # https://raw.githubusercontent.com/OWNER/REPO/main/sources/example.md
+
+# This repo's own Chapter 3 directory is named "Watching the Fleet", so its
+# path ends in "fleet/". That is a public directory name here, not the private
+# "fleet/" repo path, so allow the exact chapter path. A bare "fleet/..." path
+# elsewhere on a line still fails.
+chapters/03-watching-the-fleet/

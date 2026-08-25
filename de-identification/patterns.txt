@@ -7,8 +7,9 @@
 # --- Incident / work-order / session ids ---------------------------------
 # fleet issue references like fleet#399
 fleet#\d+
-# work orders like wo-abc123
-wo-[a-z0-9-]+
+# work orders like wo-abc123. Left \b so it does not match inside a normal
+# word such as "two-verb" (the 't' before "wo" blocks the boundary).
+\bwo-[a-z0-9-]+
 # build-supervisor session ids like bs-patterns-repo-0825
 \bbs-[a-z0-9-]+-\d{4}\b
 # cockpit session ids like cockpit-a1b2c3
