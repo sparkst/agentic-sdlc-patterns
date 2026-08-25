@@ -1,60 +1,55 @@
-# 4. Zero-Token Hooks
+# Pattern 4: Zero-Token Hooks
 
-> *What the opening of a session must guarantee belongs in a process hook, not in the instructions.*
+Chapter 1 - Session Birth and Death
 
-Chapter 1 - Session Birth and Death · Maturity: **works-but-founder-scale**
+Some guarantees are too important to leave to the model, because a model under context pressure skips
+them and it costs tokens to do at all. And some facts are only knowable at the very start: once an
+agent has been working for an hour, a plain status check cannot tell work this session did from work
+that was already sitting uncommitted when it opened. Both problems want the same answer.
 
-## The problem
+## The rule
 
-Guarantees left to the model cost tokens and get skipped under context pressure. Worse, some facts
-are only knowable at the very start: at close time, a plain status check cannot tell work this
-session did from work that was already uncommitted when the session opened.
+**What the opening of a session must guarantee belongs in a process hook, not in the instructions.**
 
-## The mechanism
+If a guarantee lives in the prompt, it is optional, because the model can always decide it has more
+important things to spend attention on. Move it into a deterministic hook that runs on its own, costs
+no tokens, and exits cleanly even when its backing service is down. Put the things that must be true
+at t=0 there: identity, draining the inbox, and any baseline you can only measure before the model
+touches anything. Then make absence safe: if the hook did not run, the feature that depended on it
+asks a human rather than guessing.
 
-Two independent start hooks, both deterministic and both spending zero model tokens. One registers
-the session: it derives a stable id, freezes it into the session's environment file, renames the
-multiplexer session to match, and drains any waiting inbox. The other takes a scope snapshot: it
-records the repo head, the branch, and the exact paths that were already dirty before the model
-touched anything, capped at a fixed number of paths with a truncation flag, on a short time budget.
+## How we do it
 
-Both hooks are installed at user level, and every hook exits zero even when its backing daemon is
-down, so a hook can never wedge a session at birth. Absence is safe by construction: with no
-snapshot, every scope-dependent close-out decision classifies as "ask a human" rather than "auto".
-Installation splices in exactly one entry and preserves every other setting.
+This is our version. The shape travels; the file names are ours.
 
-## Diagram
-
-```mermaid
-flowchart TD
-    A[Session start event] --> B[Hook 1: register]
-    A --> C[Hook 2: scope snapshot]
-    B --> B1[Derive stable id]
-    B --> B2[Freeze id into env file]
-    B --> B3[Rename multiplexer session]
-    B --> B4[Drain waiting inbox]
-    C --> C1[Record head + branch]
-    C --> C2[Record already-dirty paths<br/>capped, with truncated flag]
-    B1 & B2 & B3 & B4 & C1 & C2 --> D[Both exit 0, even if daemon down]
-    D --> E{Snapshot present at close?}
-    E -- yes --> F[Scope decisions can be auto]
-    E -- no --> G[Every scope decision: ask a human]
-```
-
-## Maturity: works-but-founder-scale
-
-The mechanism is sound and fail-safe, but its consumer has burned real work on shared checkouts,
-where "already dirty at start" is a poor proxy for "not mine". A session that registers without its
-hooks in place once caused a redelivery storm. The hook layer is right; the close-out logic that
-reads it needs a real ownership signal, not a proxy.
+1. Two independent start hooks, both deterministic and both spending zero model tokens.
+2. One registers the session: it derives a stable id, freezes it into the session's environment
+   file, renames the multiplexer session to match, and drains any waiting inbox.
+3. The other snapshots scope: the repo head, the branch, and the exact paths already dirty before the
+   model touched anything, capped at a fixed number with a truncation flag, on a short time budget.
+4. Every hook exits zero even when its daemon is down, so a hook can never wedge a session at birth.
+5. Absence is safe by construction: with no snapshot, every close-out decision that depends on scope
+   asks a human instead of guessing.
 
 ## Steal this
 
-Put identity, inbox drain, and any baseline that is only observable at the start into hooks with a
-hard time budget that exit zero on every path. Make absence degrade the dependent feature to "ask a
-human" rather than to a wrong answer.
+- Put identity, inbox drain, and any t=0-only baseline into hooks with a hard time budget that exit
+  zero on every path.
+- Make a hook that could not run degrade the dependent feature to "ask a human", never to a wrong
+  answer.
+- Measure "what was already dirty when I opened" at the start, because you cannot reconstruct it later.
 
-## Reference implementation
+## Maturity
 
-No public reference implementation yet. The running version lives in a private repo; the generic
-form above is what you reproduce.
+Works, at founder scale. The mechanism is sound and fail-safe, but the thing that reads it has burned
+real work on shared checkouts, where "already dirty at start" is a poor stand-in for "not mine". A
+session that registered without its hooks in place once caused a redelivery storm. The hook layer is
+right; the close-out logic that consumes it still needs a real ownership signal, not a proxy.
+
+## Crawl, walk, run
+
+- **Crawl:** a start script that prints the session id and the current dirty files. Ten minutes.
+- **Walk:** hooks that register identity and snapshot the dirty set, and exit zero no matter what. An
+  afternoon.
+- **Run:** two independent zero-token hooks, a capped snapshot with a truncation flag, and every
+  scope-dependent decision degrading to "ask a human" when the snapshot is missing.
