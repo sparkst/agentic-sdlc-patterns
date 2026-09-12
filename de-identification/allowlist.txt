@@ -1,0 +1,22 @@
+# De-identification allowlist: known-public substrings that must NOT trip the
+# scan even when a denylist term or pattern would otherwise match. '#' starts
+# a comment.
+#
+# Rule: an allowlist entry suppresses a hit ONLY when the matched text sits
+# entirely inside an occurrence of that entry on the same line. A bare term
+# elsewhere on the line still fails. Keep entries as specific as possible so
+# the allowlist never hides a real leak.
+
+# This repository (public) and the public skills repo it draws from.
+sparkst/agentic-sdlc-patterns
+sparkst/sparkry-claude-skills
+
+# Public source URLs cited in CREDITS.md. Add the full public URL here when a
+# generic path prefix such as "sources/" would otherwise flag it. Example:
+# https://raw.githubusercontent.com/OWNER/REPO/main/sources/example.md
+
+# This repo's own Chapter 3 directory is named "Watching the Fleet", so its
+# path ends in "fleet/". That is a public directory name here, not the private
+# "fleet/" repo path, so allow the exact chapter path. A bare "fleet/..." path
+# elsewhere on a line still fails.
+chapters/03-watching-the-fleet/
